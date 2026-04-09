@@ -20,13 +20,24 @@ app.post('/api/solve', (req, res) => {
     const puzzle = parsePuzzle(puzzleString);
     const result = solvePuzzle_CSP(puzzle);
     
+    // Convert the Set back to an array to avoid Vercel serialization errors
+    if (puzzle.leading instanceof Set) {
+      puzzle.leading = Array.from(puzzle.leading);
+    }
+
     // We send back the parsed puzzle along with the result so the frontend has letters/operands
-    res.json({ puzzle, result });
+    res.status(200).json({ puzzle, result });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Export for Vercel Serverless
+module.exports = app;
+
+// Only listen locally, Vercel handles the port mapping natively
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
